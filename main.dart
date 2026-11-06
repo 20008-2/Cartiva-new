@@ -13,10 +13,10 @@ class CartivaApp extends StatelessWidget {
       title: 'CARTIVA',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(
           seedColor: const Color(0xFF173B67),
         ),
+        useMaterial3: true,
         scaffoldBackgroundColor: const Color(0xFFF7F8FA),
       ),
       home: const CartivaHomePage(),
@@ -25,20 +25,20 @@ class CartivaApp extends StatelessWidget {
 }
 
 class Product {
+  final String name;
+  final String description;
+  final String price;
+  final String imageUrl;
+
   const Product({
     required this.name,
     required this.description,
     required this.price,
     required this.imageUrl,
   });
-
-  final String name;
-  final String description;
-  final String price;
-  final String imageUrl;
 }
 
-const List<Product> products = [
+const List<Product> shopProducts = [
   Product(
     name: 'Everyday Backpack',
     description: 'A practical bag for everyday use.',
@@ -65,17 +65,17 @@ const List<Product> products = [
   ),
 ];
 
-const List<Product> partnerDeals = [
+const List<Product> partnerProducts = [
   Product(
     name: 'Home & Lifestyle Picks',
-    description: 'Explore selected products from partner stores.',
-    price: 'Partner offer',
+    description: 'Discover selected products from partner stores.',
+    price: 'View partner offer',
     imageUrl: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?w=900',
   ),
   Product(
     name: 'Fashion Finds',
-    description: 'Discover fashion products from partner stores.',
-    price: 'Partner offer',
+    description: 'Explore fashion products from partner stores.',
+    price: 'View partner offer',
     imageUrl: 'https://images.unsplash.com/photo-1483985988355-763728e1935b?w=900',
   ),
 ];
@@ -88,11 +88,13 @@ class CartivaHomePage extends StatefulWidget {
 }
 
 class _CartivaHomePageState extends State<CartivaHomePage> {
-  int selectedTab = 0;
+  int selectedIndex = 0;
   final List<Product> cart = [];
 
   void addToCart(Product product) {
-    setState(() => cart.add(product));
+    setState(() {
+      cart.add(product);
+    });
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(content: Text('${product.name} added to your cart')),
     );
@@ -100,62 +102,53 @@ class _CartivaHomePageState extends State<CartivaHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    final pages = [
-      _shopPage(),
-      _cartPage(),
-      _partnerPage(),
-      _aboutPage(),
+    final List<Widget> pages = [
+      _buildShopPage(),
+      _buildCartPage(),
+      _buildPartnerPage(),
+      _buildAboutPage(),
     ];
 
     return Scaffold(
       appBar: AppBar(
         title: const Text(
           'CARTIVA',
-          style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.4),
+          style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1.5),
         ),
+        centerTitle: false,
         backgroundColor: const Color(0xFF173B67),
         foregroundColor: Colors.white,
         actions: [
           IconButton(
-            tooltip: 'Open cart',
-            onPressed: () => setState(() => selectedTab = 1),
+            tooltip: 'Shopping cart',
+            onPressed: () => setState(() => selectedIndex = 1),
             icon: Badge(
-              isLabelVisible: cart.isNotEmpty,
               label: Text('${cart.length}'),
+              isLabelVisible: cart.isNotEmpty,
               child: const Icon(Icons.shopping_cart_outlined),
             ),
           ),
         ],
       ),
-      body: pages[selectedTab],
+      body: pages[selectedIndex],
       bottomNavigationBar: NavigationBar(
-        selectedIndex: selectedTab,
+        selectedIndex: selectedIndex,
         onDestinationSelected: (index) {
-          setState(() => selectedTab = index);
+          setState(() {
+            selectedIndex = index;
+          });
         },
         destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.storefront_outlined),
-            label: 'Shop',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.shopping_bag_outlined),
-            label: 'Cart',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.link_outlined),
-            label: 'Partner Deals',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.info_outline),
-            label: 'About',
-          ),
+          NavigationDestination(icon: Icon(Icons.storefront_outlined), label: 'Shop'),
+          NavigationDestination(icon: Icon(Icons.shopping_bag_outlined), label: 'Cart'),
+          NavigationDestination(icon: Icon(Icons.link_outlined), label: 'Partner Deals'),
+          NavigationDestination(icon: Icon(Icons.info_outline), label: 'About'),
         ],
       ),
     );
   }
 
-  Widget _shopPage() {
+  Widget _buildShopPage() {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -176,7 +169,7 @@ class _CartivaHomePageState extends State<CartivaHomePage> {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              SizedBox(height: 10),
+              SizedBox(height: 8),
               Text(
                 'Your Home of Quality and Long-Lasting Products',
                 style: TextStyle(color: Colors.white70, fontSize: 14),
@@ -190,12 +183,14 @@ class _CartivaHomePageState extends State<CartivaHomePage> {
           style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
         ),
         const SizedBox(height: 12),
-        ...products.map((product) => _productCard(product, false)),
+        ...shopProducts.map(
+          (product) => _productCard(product, isPartner: false),
+        ),
       ],
     );
   }
 
-  Widget _partnerPage() {
+  Widget _buildPartnerPage() {
     return ListView(
       padding: const EdgeInsets.all(16),
       children: [
@@ -205,18 +200,21 @@ class _CartivaHomePageState extends State<CartivaHomePage> {
         ),
         const SizedBox(height: 8),
         const Text(
-          'Browse sample partner products. Real affiliate links must be added before launch.',
+          'Browse products offered by partner stores. Partner links and tracking still need to be connected before launch.',
         ),
         const SizedBox(height: 16),
-        ...partnerDeals.map((product) => _productCard(product, true)),
+        ...partnerProducts.map(
+          (product) => _productCard(product, isPartner: true),
+        ),
       ],
     );
   }
 
-  Widget _productCard(Product product, bool isPartner) {
+  Widget _productCard(Product product, {required bool isPartner}) {
     return Card(
       margin: const EdgeInsets.only(bottom: 14),
       clipBehavior: Clip.antiAlias,
+      elevation: 2,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -226,12 +224,14 @@ class _CartivaHomePageState extends State<CartivaHomePage> {
             child: Image.network(
               product.imageUrl,
               fit: BoxFit.cover,
-              errorBuilder: (context, error, stackTrace) => Container(
-                color: Colors.black12,
-                child: const Center(
-                  child: Icon(Icons.image_not_supported_outlined, size: 42),
-                ),
-              ),
+              errorBuilder: (context, error, stackTrace) {
+                return Container(
+                  color: Colors.grey.shade200,
+                  child: const Center(
+                    child: Icon(Icons.image_not_supported_outlined, size: 42),
+                  ),
+                );
+              },
             ),
           ),
           Padding(
@@ -255,8 +255,8 @@ class _CartivaHomePageState extends State<CartivaHomePage> {
                     Text(
                       product.price,
                       style: const TextStyle(
-                        color: Color(0xFF173B67),
                         fontWeight: FontWeight.bold,
+                        color: Color(0xFF173B67),
                       ),
                     ),
                     FilledButton(
@@ -265,7 +265,7 @@ class _CartivaHomePageState extends State<CartivaHomePage> {
                           ScaffoldMessenger.of(context).showSnackBar(
                             const SnackBar(
                               content: Text(
-                                'Partner links are not connected yet.',
+                                'Partner shopping links have not been connected yet.',
                               ),
                             ),
                           );
@@ -273,7 +273,7 @@ class _CartivaHomePageState extends State<CartivaHomePage> {
                           addToCart(product);
                         }
                       },
-                      child: Text(isPartner ? 'View offer' : 'Add to cart'),
+                      child: Text(isPartner ? 'Partner offer' : 'Add to cart'),
                     ),
                   ],
                 ),
@@ -285,21 +285,24 @@ class _CartivaHomePageState extends State<CartivaHomePage> {
     );
   }
 
-  Widget _cartPage() {
+  Widget _buildCartPage() {
     if (cart.isEmpty) {
       return const Center(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.grey),
-            SizedBox(height: 12),
-            Text(
-              'Your cart is empty',
-              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-            ),
-            SizedBox(height: 6),
-            Text('Products you add will appear here.'),
-          ],
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(Icons.shopping_cart_outlined, size: 64, color: Colors.grey),
+              SizedBox(height: 12),
+              Text(
+                'Your cart is empty',
+                style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              ),
+              SizedBox(height: 6),
+              Text('Products you add will appear here.'),
+            ],
+          ),
         ),
       );
     }
@@ -319,10 +322,12 @@ class _CartivaHomePageState extends State<CartivaHomePage> {
               title: Text(product.name),
               subtitle: Text(product.price),
               trailing: IconButton(
-                tooltip: 'Remove',
+                tooltip: 'Remove item',
                 icon: const Icon(Icons.delete_outline),
                 onPressed: () {
-                  setState(() => cart.removeAt(index));
+                  setState(() {
+                    cart.removeAt(index);
+                  });
                 },
               ),
             ),
@@ -330,7 +335,7 @@ class _CartivaHomePageState extends State<CartivaHomePage> {
         }),
         const SizedBox(height: 12),
         const Text(
-          'Demo only: secure checkout and real payments are not connected.',
+          'Demo only: checkout and real payments are not connected yet.',
           style: TextStyle(color: Colors.redAccent),
         ),
         const SizedBox(height: 8),
@@ -339,7 +344,7 @@ class _CartivaHomePageState extends State<CartivaHomePage> {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
                 content: Text(
-                  'This is a demo checkout. Payment setup is still required.',
+                  'Checkout is a demo. Payment setup is still required.',
                 ),
               ),
             );
@@ -350,30 +355,33 @@ class _CartivaHomePageState extends State<CartivaHomePage> {
     );
   }
 
-  Widget _aboutPage() {
-    return const ListView(
+  Widget _buildAboutPage() {
+    return const Padding(
       padding: EdgeInsets.all(20),
-      children: [
-        Text(
-          'About CARTIVA',
-          style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
-        ),
-        SizedBox(height: 12),
-        Text(
-          'CARTIVA is a shopping platform concept bringing useful products and partner deals together in one place.',
-          style: TextStyle(fontSize: 16, height: 1.5),
-        ),
-        SizedBox(height: 12),
-        Text(
-          'Your Home of Quality and Long-Lasting Products',
-          style: TextStyle(fontWeight: FontWeight.bold),
-        ),
-        SizedBox(height: 18),
-        Text(
-          'This is a starter app, not a live store. Supplier ordering, delivery, affiliate tracking, customer accounts, secure payments, privacy features, and order management must be added and tested before accepting real orders.',
-          style: TextStyle(color: Colors.black54, height: 1.5),
-        ),
-      ],
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'About CARTIVA',
+            style: TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
+          ),
+          SizedBox(height: 12),
+          Text(
+            'CARTIVA is a shopping platform concept designed to bring useful products and partner deals together in one place.',
+            style: TextStyle(fontSize: 16, height: 1.5),
+          ),
+          SizedBox(height: 12),
+          Text(
+            'Your Home of Quality and Long-Lasting Products',
+            style: TextStyle(fontWeight: FontWeight.bold, height: 1.5),
+          ),
+          SizedBox(height: 18),
+          Text(
+            'This is an early starter app. Supplier ordering, delivery, affiliate tracking, customer accounts, secure payments, and order management must be added and tested before the app is used for real purchases.',
+            style: TextStyle(color: Colors.black54, height: 1.5),
+          ),
+        ],
+      ),
     );
   }
 }
